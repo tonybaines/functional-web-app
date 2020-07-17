@@ -12,11 +12,20 @@ repositories {
     maven { url "https://dl.bintray.com/arrow-kt/arrow-kt/" }
 }
 
+test {
+    useJUnitPlatform()
+}
+
 def arrow_version = "0.10.4"
+def kotest_version = "4.1.1"
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
     compile "io.arrow-kt:arrow-core:$arrow_version"
+    compile "io.arrow-kt:arrow-fx:$arrow_version"
     compile "io.arrow-kt:arrow-syntax:$arrow_version"
     kapt    "io.arrow-kt:arrow-meta:$arrow_version"
-    testImplementation "io.kotlintest:kotlintest:2.0.7"
+
+    testImplementation "io.kotest:kotest-runner-junit5-jvm:$kotest_version" // for kotest framework
+    testImplementation "io.kotest:kotest-assertions-core-jvm:$kotest_version" // for kotest core jvm assertions
+    testImplementation "io.kotest:kotest-runner-console-jvm:$kotest_version" // for kotest core jvm assertions
 }
