@@ -10,4 +10,8 @@ class WebAppSpec : StringSpec({
         val httpRequest = HttpRequest(GET, "/some/valid/path")
         WebApp.handle(httpRequest) shouldBe HttpResponse(httpRequest, "Hello World!")
     }
+
+    "Handle a request for a different valid path" {
+        WebApp.handle(HttpRequest(GET, "/another/valid/path")).body shouldBe "42"
+    }
 })
