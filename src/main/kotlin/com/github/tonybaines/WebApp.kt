@@ -1,34 +1,40 @@
 package com.github.tonybaines
 
-import arrow.core.*
-import arrow.core.extensions.either.foldable.get
-import arrow.fx.ForIO
+import arrow.core.getOrElse
 import arrow.fx.IO
-import arrow.fx.Promise
-import arrow.fx.fix
-import java.lang.RuntimeException
-import java.security.Provider
+import arrow.fx.typeclasses.Duration
+import arrow.fx.typeclasses.seconds
+
 
 object WebApp {
 
-    private val someValidPath: ResponseProvider = { IO.just(Result(200, "Hello World!")) }
-    private val anotherValidPath: ResponseProvider = { IO.just(Result(200, "42")) }
-    private val brokenPath: ResponseProvider = { IO.raiseError(RuntimeException("Whoops!")) }
+    private val someValidPath: ResponseProvider = IO.just(Result(200, "Hello World!"))
+    private val anotherValidPath: ResponseProvider = IO.just(Result(200, "42"))
+    private val brokenPath: ResponseProvider = IO.raiseError(RuntimeException("Whoops!"))
+    private val notFound: ResponseProvider = IO.just(Result(404, ""))
 
-    fun providerFor(req: HttpRequest): ResponseProvider = {
+    private fun providerFor(req: HttpRequest): ResponseProvider =
         when (req.uri) {
-            "/some/valid/path" -> someValidPath()
-            "/another/valid/path" -> anotherValidPath()
-            "/broken/path" -> brokenPath()
-            else -> IO.just(Result(404, ""))
+            "/some/valid/path" -> someValidPath
+            "/another/valid/path" -> anotherValidPath
+            "/broken/path" -> brokenPath
+            "/resource/which/takes/1s/to/complete" -> anotherValidPath.delayedBy(1.seconds)
+            "/resource/which/takes/3s/to/complete" -> anotherValidPath.delayedBy(3.seconds)
+            else -> notFound
         }
-    }
+
 
     fun handle(httpRequest: HttpRequest): HttpResponse =
-        providerFor(httpRequest)()
+        providerFor(httpRequest)
             .redeem(
-                { t ->  HttpResponse(httpRequest, 500, t.localizedMessage)},
+                { t -> HttpResponse(httpRequest, 500, t.localizedMessage) },
                 { result -> HttpResponse(httpRequest, result.first, result.second) }
-            ).unsafeRunSync()
+            ).unsafeRunTimed(2.seconds)
+            .getOrElse { HttpResponse(httpRequest, 503, "Processing timed-out") }
+
+    private fun ResponseProvider.delayedBy(seconds: Duration): ResponseProvider =
+        IO.sleep(seconds)
+            .followedBy(this)
+
 
 }
