@@ -13,6 +13,11 @@ object WebApp {
     private val brokenPath: ResponseProvider = IO.raiseError(RuntimeException("Whoops!"))
     private val notFound: ResponseProvider = IO.just(Result(404, ""))
 
+    private fun ResponseProvider.delayedBy(seconds: Duration): ResponseProvider =
+        IO.sleep(seconds)
+            .followedBy(this)
+
+
     private fun providerFor(req: HttpRequest): ResponseProvider =
         when (req.uri) {
             "/some/valid/path" -> someValidPath
@@ -29,12 +34,9 @@ object WebApp {
             .redeem(
                 { t -> HttpResponse(httpRequest, 500, t.localizedMessage) },
                 { result -> HttpResponse(httpRequest, result.first, result.second) }
-            ).unsafeRunTimed(2.seconds)
+            )
+            .unsafeRunTimed(2.seconds)
             .getOrElse { HttpResponse(httpRequest, 503, "Processing timed-out") }
-
-    private fun ResponseProvider.delayedBy(seconds: Duration): ResponseProvider =
-        IO.sleep(seconds)
-            .followedBy(this)
 
 
 }

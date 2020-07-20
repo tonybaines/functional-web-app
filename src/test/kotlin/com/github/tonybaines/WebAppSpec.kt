@@ -33,4 +33,8 @@ class WebAppSpec : StringSpec({
         WebApp.handle(HttpRequest(GET, "/resource/which/takes/3s/to/complete"))
             .status shouldBe 503
     }
+
+    "Handle a request with parameters" { TODO() }
+    "Handle a request with different values of parameters"  { TODO() }
+    "Handle a request with parameters that fails validation"  { TODO() }
 })
