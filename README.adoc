@@ -1,0 +1,93 @@
+= Functional Web App
+:toc:
+
+== Principles / Constraints
+. Laziness - put off execution until the last possible moment
+. Immutability
+. DIY - avoid libraries if possible
+
+== Outline
+A canonical HTTP request controller i.e. `HttpRequest -> HttpResponse`
+
+* Requests should be validated
+** Does it match a declared resource?
+** Are any parameters present and valid?
+* The work of handling a request may
+** Fail
+** Time-out
+
+== Evolution
+
+=== Happy Path
+A request for a resource that exists.
+
+`handleRequest` : `HttpRequest` -> `HttpResponse`
+
+
+
+=== Validation: Not Found
+`HttpRequest` -> `MaybeValid` -> `HttpResponse`
+
+A request for a resource that doesn't exist.
+
+* When `Valid`, generate a response as normal,.
+* Generate a `NotFound` otherwise.
+
+----
+handleRequest : HttpRequest -> HttpResponse = 
+    match : HttpRequest -> MaybeValid
+  + execute : MaybeValid -> HttpResponse
+----
+
+=== Validation: Bad Request
+`HttpRequest` -> `MaybeValid` -> `HttpResponse`
+
+----
+MaybeValid {
+    Valid | Invalid
+}
+----
+
+A request for a resource that exists, but with bad parameter(s)
+
+When `Valid` generate a response as normal, generate a reasonable response for `Invalid`.
+
+
+----
+handleRequest : HttpRequest -> HttpResponse =
+    match : HttpRequest -> MaybeValid
+  + validate : MaybeValid -> MaybeValid
+  + execute : MaybeValid -> HttpResponse
+----
+
+
+=== Processing: failure
+`HttpRequest` -> `MaybeValid` -> `Outcome` -> `HttpResponse`
+
+----
+Outcome {
+    Good | Bad
+}
+----
+
+The work happens in `MaybeValid` -> `Outcome`, but can't complete
+normally.
+
+If the request is `Invalid` translate that into an appropriate `Bad`
+outcome.
+
+----
+handleRequest : HttpRequest -> HttpResponse =
+    match : HttpRequest -> MaybeValid
+  + validate : MaybeValid -> MaybeValid
+  + execute : MaybeValid -> Outcome
+  + decode : Outcome -> HttpResponse
+----
+
+
+=== Processing: time-out
+`HttpRequest` -> `MaybeValid` -> `Outcome` -> `HttpResponse`
+
+
+Again, the work happens in `MaybeValid` -> `Outcome`, but can't
+complete in time.
