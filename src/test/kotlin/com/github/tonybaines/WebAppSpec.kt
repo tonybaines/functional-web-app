@@ -20,9 +20,17 @@ class WebAppSpec : StringSpec({
         WebApp.handle(HttpRequest(GET, "/unknown/path")).status shouldBe 404
     }
 
-    "Handle a request that can fail" {
-        WebApp.handle(HttpRequest(GET, "/broken/path")).status shouldBe 500
+    "Handle a request with valid parameters" {
+        WebApp.handle(HttpRequest(GET, "/valid/path/with/params", mapOf("age" to 42))).status shouldBe 200
     }
+
+    "Handle a request with invalid parameters" {
+        WebApp.handle(HttpRequest(GET, "/valid/path/with/params", mapOf("age" to "42"))).status shouldBe 400
+    }
+
+//    "Handle a request that can fail" {
+//        WebApp.handle(HttpRequest(GET, "/broken/path")).status shouldBe 500
+//    }
 
 //    "Handle a request with latency" {
 //        WebApp.handle(HttpRequest(GET, "/resource/which/takes/1s/to/complete"))

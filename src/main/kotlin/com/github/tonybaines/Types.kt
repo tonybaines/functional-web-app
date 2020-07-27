@@ -3,14 +3,14 @@ package com.github.tonybaines
 
 enum class Method { GET, PUT, POST, DELETE }
 
-data class HttpRequest(val method: Method, val uri: String)
+data class HttpRequest(val method: Method, val uri: String, val params: Map<String,Any> = emptyMap())
 
 data class HttpResponse(val request: HttpRequest, val status: Int = 200, val body: String)
 
 typealias ResponseProvider = (HttpRequest) -> HttpResponse
 
 sealed class MaybeValid {
-    class Valid(var handler: ResponseProvider) : MaybeValid()
+    class Valid(var provider: ResponseProvider) : MaybeValid()
     sealed class Invalid(val status: Int, var reason: String) : MaybeValid() {
         class NotFound() : Invalid(404,"Not Found")
         class BadRequest() : Invalid(400,"Bad Request")

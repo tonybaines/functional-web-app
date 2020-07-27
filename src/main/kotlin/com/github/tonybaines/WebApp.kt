@@ -20,6 +20,9 @@ object WebApp {
         when (req.uri) {
             "/some/valid/path" -> { r -> Valid(someValidPath) }
             "/another/valid/path" -> { r -> Valid(anotherValidPath) }
+            "/valid/path/with/params" ->
+                if (req.params.containsKey("age") && req.params["age"] is Int) { r -> Valid(anotherValidPath) }
+                else { _ -> Invalid.BadRequest() }
 //            "/broken/path" -> brokenPath
 //            "/resource/which/takes/1s/to/complete" -> anotherValidPath//.delayedBy(1.seconds)
 //            "/resource/which/takes/3s/to/complete" -> anotherValidPath//.delayedBy(3.seconds)
@@ -28,14 +31,15 @@ object WebApp {
 
     private fun execute(httpRequest: HttpRequest, handler: (HttpRequest) -> MaybeValid): HttpResponse {
         val handler = handler(httpRequest)
-        return when(handler) {
-            is Valid -> handler.handler(httpRequest)
+        return when (handler) {
+            is Valid -> handler.provider(httpRequest)
             is Invalid -> HttpResponse(httpRequest, handler.status, handler.reason)
         }
     }
 
     fun handle(httpRequest: HttpRequest): HttpResponse =
-        execute(httpRequest,
+        execute(
+            httpRequest,
             match(httpRequest)
         )
 
