@@ -7,7 +7,7 @@ data class HttpRequest(val method: Method, val uri: String, val params: Map<Stri
 
 data class HttpResponse(val request: HttpRequest, val status: Int = 200, val body: String)
 
-typealias ResponseProvider = (HttpRequest) -> HttpResponse
+typealias ResponseProvider = (HttpRequest) -> Outcome
 
 sealed class MaybeValid {
     class Valid(var provider: ResponseProvider) : MaybeValid()
@@ -21,20 +21,20 @@ sealed class MaybeValid {
  * Something went wrong
  */
 sealed class Outcome {
-    sealed class Good(val status: Int, val body: String) : Outcome() {}
+    class Good(val status: Int, val body: String) : Outcome() {}
 
-    sealed class Bad : Outcome() {
+    sealed class Bad(var status: Int) : Outcome() {
         abstract val reason: String
 
-        class JustBad(var status: Int, val message: String) : Bad() {
+        class JustBad(status: Int, val message: String) : Bad(status) {
             override val reason: String
                 get() = message
 
         }
 
-        class ExceptionallyBad(var status: Int, val e: Exception) : Bad() {
+        class ExceptionallyBad(status: Int, val e: Throwable) : Bad(status) {
             override val reason: String
-                get() = e.localizedMessage
+                get() = e?.localizedMessage?:"FAILED"
         }
     }
 }
