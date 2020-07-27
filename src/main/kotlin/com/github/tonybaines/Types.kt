@@ -10,7 +10,7 @@ data class HttpResponse(val request: HttpRequest, val status: Int = 200, val bod
 typealias ResponseProvider = (HttpRequest) -> HttpResponse
 
 sealed class MaybeValid {
-    class Valid(var request: HttpRequest) : MaybeValid()
+    class Valid(var handler: ResponseProvider) : MaybeValid()
     sealed class Invalid(val status: Int, var reason: String) : MaybeValid() {
         class NotFound() : Invalid(404,"Not Found")
         class BadRequest() : Invalid(400,"Bad Request")

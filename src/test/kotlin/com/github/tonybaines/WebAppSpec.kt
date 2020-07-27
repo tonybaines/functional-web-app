@@ -24,17 +24,17 @@ class WebAppSpec : StringSpec({
         WebApp.handle(HttpRequest(GET, "/broken/path")).status shouldBe 500
     }
 
-    "Handle a request with latency" {
-        WebApp.handle(HttpRequest(GET, "/resource/which/takes/1s/to/complete"))
-            .body shouldBe "42"
-    }
+//    "Handle a request with latency" {
+//        WebApp.handle(HttpRequest(GET, "/resource/which/takes/1s/to/complete"))
+//            .body shouldBe "42"
+//    }
+//
+//    "Handle a request with latency that fails" {
+//        WebApp.handle(HttpRequest(GET, "/resource/which/takes/3s/to/complete"))
+//            .status shouldBe 503
+//    }
 
-    "Handle a request with latency that fails" {
-        WebApp.handle(HttpRequest(GET, "/resource/which/takes/3s/to/complete"))
-            .status shouldBe 503
-    }
-
-    "Handle a request with parameters" { TODO() }
-    "Handle a request with different values of parameters"  { TODO() }
-    "Handle a request with parameters that fails validation"  { TODO() }
+//    "Handle a request with parameters" { TODO() }
+//    "Handle a request with different values of parameters"  { TODO() }
+//    "Handle a request with parameters that fails validation"  { TODO() }
 })

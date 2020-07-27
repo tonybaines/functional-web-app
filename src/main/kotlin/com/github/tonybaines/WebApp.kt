@@ -1,9 +1,12 @@
 package com.github.tonybaines
 
+import com.github.tonybaines.MaybeValid.Invalid
+import com.github.tonybaines.MaybeValid.Valid
+
 object WebApp {
 
-    private val someValidPath: ResponseProvider = { req -> HttpResponse(req,200, "Hello World!") }
-    private val anotherValidPath: ResponseProvider = { req -> HttpResponse(req,200, "42") }
+    private val someValidPath: ResponseProvider = { req -> HttpResponse(req, 200, "Hello World!") }
+    private val anotherValidPath: ResponseProvider = { req -> HttpResponse(req, 200, "42") }
 //    private val brokenPath: ResponseProvider = { ItFailed(BadThing.ExceptionallyBadThing(RuntimeException("Whoops!"))) }
 
 //    private val notFound: ResponseProvider = { ItWorked(Result.Yup(404, "")) }
@@ -13,19 +16,28 @@ object WebApp {
 //            .followedBy(this)
 
 
-    private fun providerFor(req: HttpRequest): ResponseProvider = someValidPath
-//        when (req.uri) {
-//            "/some/valid/path" -> someValidPath
-//            "/another/valid/path" -> anotherValidPath
+    private fun match(req: HttpRequest): (HttpRequest) -> MaybeValid =
+        when (req.uri) {
+            "/some/valid/path" -> { r -> Valid(someValidPath) }
+            "/another/valid/path" -> { r -> Valid(anotherValidPath) }
 //            "/broken/path" -> brokenPath
 //            "/resource/which/takes/1s/to/complete" -> anotherValidPath//.delayedBy(1.seconds)
 //            "/resource/which/takes/3s/to/complete" -> anotherValidPath//.delayedBy(3.seconds)
-//            else -> notFound
-//        }
+            else -> { r -> Invalid.NotFound() }
+        }
 
+    private fun execute(httpRequest: HttpRequest, handler: (HttpRequest) -> MaybeValid): HttpResponse {
+        val handler = handler(httpRequest)
+        return when(handler) {
+            is Valid -> handler.handler(httpRequest)
+            is Invalid -> HttpResponse(httpRequest, handler.status, handler.reason)
+        }
+    }
 
     fun handle(httpRequest: HttpRequest): HttpResponse =
-        providerFor(httpRequest)(httpRequest)
+        execute(httpRequest,
+            match(httpRequest)
+        )
 
 }
 
